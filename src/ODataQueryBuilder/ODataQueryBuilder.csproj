@@ -2,6 +2,8 @@
 
   <PropertyGroup>
     <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
+    <RootNamespace>SunAuto.OData</RootNamespace>
+    <AssemblyName>SunAuto.OData.QueryBuilder</AssemblyName>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <PackageId>ODataQueryBuilder</PackageId>

@@ -2,11 +2,21 @@ namespace SunAuto.OData;
 
 public static class Extensions
 {
-    public static Option Select(this QueryBuilder builder, params OptionValue[] optionValues) => builder.Add(new SelectOption(optionValues));
+    public static Option Select(this QueryBuilder builder, params OptionValue[] optionValues) =>
+        builder.Add(new SelectOption(optionValues));
+    public static Option Select(this QueryBuilder builder, OptionValue[] optionValues, Func<QueryBuilder, Option>? nested) {
+        builder.Add(new SelectOption(optionValues));
+        builder.Add( nested?.Invoke(builder));}
+    // public static Option Select(this QueryBuilder builder, params OptionValue[] optionValues) => builder.Add(new SelectOption(optionValues));
+    // public static Option Select(this QueryBuilder builder, params OptionValue[] optionValues) => builder.Add(new SelectOption(optionValues));
     // public static Option Select(this QueryBuilder builder, string optionValue, Func<QueryBuilder, Option>? nested = null) => builder.Add(new SelectOption(optionValue, nested?.Invoke(new QueryBuilder())));
     // public static Option Select(this Option builder, params string[] optionValues) => builder.Add(new SelectOption(optionValues));
     // public static Option Select(this Option builder, string optionValue, Func<QueryBuilder, Option>? nested = null) => builder.Add(new SelectOption(optionValue, nested?.Invoke(new QueryBuilder())));
 
+    public static Option Expand(this QueryBuilder builder, params OptionValue[] optionValues) => 
+        new ExpandOption( optionValues);
+    public static Option OrderBy(this QueryBuilder builder, params OptionValue[] optionValues) => 
+        new OrderByOption( optionValues);
     public static Option Expand(this string targetOptionValue, params OptionValue[] optionValues) => new ExpandOption(targetOptionValue, optionValues);
 
     // public static Option Filter(this QueryBuilder builder, params string[] optionValues) => builder.Add(new FilterOption(optionValues));
@@ -51,7 +61,7 @@ public class FilterOption(params object[] optionValues) : Option(optionValues)
 
 public class ExpandOption(params object[] optionValues) : Option(optionValues)
 {
-    public ExpandOption(string targetOptionValue, params OptionValue[] optionValues) : base(new OptionValue(targetOptionValue, new SelectOption(optionValues)))
+    public ExpandOption(string targetOptionValue, params OptionValue[] optionValues) : this(new OptionValue(targetOptionValue, new SelectOption(optionValues)))
     {
     }
 

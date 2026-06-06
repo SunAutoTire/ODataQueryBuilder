@@ -1,2 +1,2 @@
 # ODataQueryBuilder
-Build OData queries in .NET fluent interface.
+Build OData queries in a .NET fluent interface.

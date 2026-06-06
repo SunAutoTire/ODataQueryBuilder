@@ -1,16 +1,14 @@
 namespace SunAuto.OData;
 
-public class OptionValue
+public class OptionValue(string value, params Option[] nestedOptions)
 {
-    public OptionValue(string value, params Option[] nestedOptions)
-    {
-        Value = value;
-        NestedOptions = nestedOptions;
-    }
+    public string Value { get; } = value;
 
-    public string Value { get; }
-    
-    public Option[] NestedOptions { get; }
+    public IEnumerable<Option> NestedOptions { get; } = nestedOptions;
 
-    public override string ToString() => $"{Value}({string.Join(',', NestedOptions.Select(o => o.ToString()))})";
+    public static implicit operator OptionValue(string value) => new(value ?? string.Empty);
+
+    public override string ToString() => NestedOptions.Any()
+        ? $"{Value}({string.Join(',', NestedOptions.Select(o => o.ToString()))})"
+        : Value;
 }

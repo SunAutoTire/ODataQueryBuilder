@@ -18,7 +18,8 @@ public static class Extensions
     public static QueryBuilder Select(this QueryBuilder builder, OptionValue[] optionValues, Func<QueryBuilder, Option[]>? nested)
     {
         builder.Add(new SelectOption(optionValues));
-        nested?.Invoke(builder);
+        builder.Options.AddRange(nested?.Invoke(builder) ?? []);
+
         return builder;
     }
     // public static Option Select(this QueryBuilder builder, params OptionValue[] optionValues) => builder.Add(new SelectOption(optionValues));
@@ -34,13 +35,15 @@ public static class Extensions
         return option;
     }
 
+
     public static Option OrderBy(this QueryBuilder builder, params OptionValue[] optionValues)
     {
         var option = new OrderByOption(optionValues);
         builder.Add(option);
         return option;
     }
-    public static Option Expand(this string targetOptionValue, params OptionValue[] optionValues) => new ExpandOption(targetOptionValue, optionValues);
+    public static OptionValue Expand(this string targetOptionValue, params OptionValue[] optionValues)
+        => new(targetOptionValue, new ExpandOption(optionValues));
 
     // public static Option Filter(this QueryBuilder builder, params string[] optionValues) => builder.Add(new FilterOption(optionValues));
     // public static Option Filter(this Option builder, params string[] optionValues) => builder.Add(new FilterOption(optionValues));

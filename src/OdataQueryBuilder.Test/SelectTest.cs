@@ -18,7 +18,7 @@ public class SelectTest
     [Theory(DisplayName = "Select Single")]
     [InlineData(false, "Property")]
     [InlineData(true, "Property")]
-    public void Test1(bool ignore, string select)
+    public void Test4(bool ignore, string select)
     {
         var query = new QueryBuilder()
             .Select(ignore, select)
@@ -41,8 +41,8 @@ public class SelectTest
         Assert.Equal("?$select=Property,Property2", query);
     }
 
-    [Fact(DisplayName = "Select And")]
-    public void Test2()
+    [Fact(DisplayName = "Select With Filter")]
+    public void Test3()
     {
         var query = new QueryBuilder()
             .Select("Property")
@@ -55,56 +55,60 @@ public class SelectTest
 
     #endregion
 
-    #region Explicit Arguments
+    // NOTE: this region looks like a copy of FilterTest's "Explicit Arguments" region with Filter
+    // renamed to Select: every case calls .Select(...) but asserts a "?$filter=..." result, and chains
+    // .And()/.Or()/.ToBool(), which are $filter connectives with no meaning for $select. Commented out
+    // pending a decision on what Select was meant to do here.
+    // #region Explicit Arguments
 
-    [Fact(DisplayName = "Select Single")]
-    public void Test5()
-    {
-        var query = new QueryBuilder()
-            .Select("Property".Equal("Value"))
-            .Build();
+    // [Fact(DisplayName = "Select Single")]
+    // public void Test5()
+    // {
+    //     var query = new QueryBuilder()
+    //         .Select("Property".Equal("Value"))
+    //         .Build();
 
-        Assert.Equal("?$filter=Property eq 'Value'", query);
-    }
+    //     Assert.Equal("?$filter=Property eq 'Value'", query);
+    // }
 
-    [Fact(DisplayName = "Select And")]
-    public void Test6()
-    {
-        var query = new QueryBuilder()
-            .Select("Property".Equal("Value"))
-            .And()
-            .Select("Property2".Equal("Value2"))
-            .Build();
+    // [Fact(DisplayName = "Select And")]
+    // public void Test6()
+    // {
+    //     var query = new QueryBuilder()
+    //         .Select("Property".Equal("Value"))
+    //         .And()
+    //         .Select("Property2".Equal("Value2"))
+    //         .Build();
 
-        Assert.Equal("?$filter=Property eq 'Value' and Property2 eq 'Value2'", query);
-    }
-    [Fact(DisplayName = "Select Or")]
+    //     Assert.Equal("?$filter=Property eq 'Value' and Property2 eq 'Value2'", query);
+    // }
+    // [Fact(DisplayName = "Select Or")]
 
-    public void Test7()
-    {
-        var query = new QueryBuilder()
-            .Select("Property".Equal("Value"))
-            .Or()
-            .Select("Property2".Equal("Value2"))
-            .Build();
+    // public void Test7()
+    // {
+    //     var query = new QueryBuilder()
+    //         .Select("Property".Equal("Value"))
+    //         .Or()
+    //         .Select("Property2".Equal("Value2"))
+    //         .Build();
 
-        Assert.Equal("?$filter=Property eq 'Value' or Property2 eq 'Value2'", query);
-    }
+    //     Assert.Equal("?$filter=Property eq 'Value' or Property2 eq 'Value2'", query);
+    // }
 
-    [Fact(DisplayName = "Select And Or")]
-    public void Test8()
-    {
-        var query = new QueryBuilder()
-            .Select("Property".Equal("Value"))
-            .And()
-            .Select("Property2".Equal("Value2"))
-            .ToBool()
-            .Or()
-            .Select("Property3".Equal("Value3"))
-            .Build();
+    // [Fact(DisplayName = "Select And Or")]
+    // public void Test8()
+    // {
+    //     var query = new QueryBuilder()
+    //         .Select("Property".Equal("Value"))
+    //         .And()
+    //         .Select("Property2".Equal("Value2"))
+    //         .ToBool()
+    //         .Or()
+    //         .Select("Property3".Equal("Value3"))
+    //         .Build();
 
-        Assert.Equal("?$filter=(Property eq 'Value' and Property2 eq 'Value2') or Property3 eq 'Value3'", query);
-    }
+    //     Assert.Equal("?$filter=(Property eq 'Value' and Property2 eq 'Value2') or Property3 eq 'Value3'", query);
+    // }
 
-    #endregion
+    // #endregion
 }

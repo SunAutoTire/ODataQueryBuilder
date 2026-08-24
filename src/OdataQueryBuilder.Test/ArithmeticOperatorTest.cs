@@ -36,8 +36,8 @@ public class ArithmeticOperatorTest
         Assert.Equal("6 div 2", operation);
     }
     
-    [Fact(DisplayName = "Divide test")]
-    public void Test4()
+    [Fact(DisplayName = "Divide By test")]
+    public void Test5()
     {
         var operation = 6.DivideBy(2.0);
 
@@ -45,7 +45,7 @@ public class ArithmeticOperatorTest
     }
     
     [Fact(DisplayName = "Modulo test")]
-    public void Test6   ()
+    public void Test6()
     {
         var operation = 5.Modulo(2);
 

@@ -35,8 +35,8 @@ public class ExpandTest
         Assert.Equal("?$filter=Property eq 'Value'&$expand=Property,AnotherProperty", query);
     }
 
-    [Fact(DisplayName = "Test1: Expand single property")]
-    public void Test1()
+    [Fact(DisplayName = "Test4: Expand nested property")]
+    public void Test4()
     {
         var query = new QueryBuilder()
             .Expand("Property".Expand("SubProperty"))
@@ -45,8 +45,8 @@ public class ExpandTest
         Assert.Equal("?$expand=Property($expand=SubProperty)", query);
     }
     
-    [Fact(DisplayName = "Test2: Expand multiple properties")]
-    public void Test2()
+    [Fact(DisplayName = "Test5: Expand multiple nested properties")]
+    public void Test5()
     {
         var query = new QueryBuilder()
             .Expand("Property".Expand("SubProperty"))
@@ -56,8 +56,8 @@ public class ExpandTest
         Assert.Equal("?$expand=Property($expand=SubProperty),AnotherProperty($expand=SubAnotherProperty)", query);
     }
     
-    [Fact(DisplayName = "Test3: Expand with filter")]
-    public void Test3()
+    [Fact(DisplayName = "Test6: Expand nested with filter")]
+    public void Test6()
     {
         var query = new QueryBuilder()
             .Expand("Property".Expand("SubProperty"))

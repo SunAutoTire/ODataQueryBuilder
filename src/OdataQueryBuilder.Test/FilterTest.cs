@@ -18,7 +18,7 @@ public class FilterTest
     [Theory(DisplayName = "Filter Single")]
     [InlineData(false, "Property eq 'Value'")]
     [InlineData(true, "Property eq 'Value'")]
-    public void Test1(bool ignore, string filter)
+    public void Test9(bool ignore, string filter)
     {
         var query = new QueryBuilder()
             .Filter(ignore, filter)

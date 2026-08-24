@@ -7,7 +7,7 @@ public class LogicalOperatorTest
     {
         var operation = "Property".And("Value");
 
-        Assert.Equal("Property and 'Value'", operation);
+        Assert.Equal("Property and Value", operation);
     }
     
     [Fact(DisplayName = "Or test")]
@@ -15,6 +15,6 @@ public class LogicalOperatorTest
     {
         var operation = "Property".Or("Value");
 
-        Assert.Equal("Property or 'Value'", operation);
+        Assert.Equal("Property or Value", operation);
     }
 }

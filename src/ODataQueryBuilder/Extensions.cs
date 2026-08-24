@@ -1,126 +1,83 @@
-// namespace SunAuto.OData;
+namespace SunAuto.OData;
 
-// public static class Extensions
-// {
-//     public static QueryBuilder Select(this QueryBuilder builder, params OptionValue[] optionValues)
-//     {
-//         builder.Add(new SelectOption(optionValues));
-//         return builder;
-//     }
+/// <summary>
+/// Extension methods that scope query options to a single value, producing the nested form
+/// <c>Property($expand=Child;$orderby=Name desc)</c> used inside <c>$select</c> and <c>$expand</c>.
+/// </summary>
+/// <remarks>
+/// Each call appends another nested option, so chaining builds them up in call order. The <c>string</c>
+/// overloads start a chain from a property name; the <see cref="OptionValue"/> overloads continue one.
+/// </remarks>
+public static class Extensions
+{
+    /// <summary>Scopes a <c>$select</c> to a property.</summary>
+    /// <param name="property">The property the nested option applies to.</param>
+    /// <param name="optionValues">The properties to select within <paramref name="property"/>.</param>
+    public static OptionValue Select(this string property, params OptionValue[] optionValues)
+        => new OptionValue(property).Select(optionValues);
 
-//     public static QueryBuilder Select(this QueryBuilder builder, OptionValue[] optionValues, Action<QueryBuilder>? nested)
-//     {
-//         builder.Add(new SelectOption(optionValues));
-//         nested?.Invoke(builder);
-//         return builder;
-//     }
+    /// <inheritdoc cref="Select(string, OptionValue[])" />
+    /// <param name="target">The value the nested option applies to.</param>
+    /// <param name="optionValues">The properties to select within <paramref name="target"/>.</param>
+    public static OptionValue Select(this OptionValue target, params OptionValue[] optionValues)
+        => target.Nest("select", optionValues);
 
-//     public static QueryBuilder Select(this QueryBuilder builder, OptionValue[] optionValues, Func<QueryBuilder, Option[]>? nested)
-//     {
-//         builder.Add(new SelectOption(optionValues));
-//         builder.Options.AddRange(nested?.Invoke(builder) ?? []);
+    /// <summary>Scopes an <c>$expand</c> to a property.</summary>
+    /// <param name="property">The navigation property the nested option applies to.</param>
+    /// <param name="optionValues">The navigation properties to expand within <paramref name="property"/>.</param>
+    public static OptionValue Expand(this string property, params OptionValue[] optionValues)
+        => new OptionValue(property).Expand(optionValues);
 
-//         return builder;
-//     }
-//     // public static Option Select(this QueryBuilder builder, params OptionValue[] optionValues) => builder.Add(new SelectOption(optionValues));
-//     // public static Option Select(this QueryBuilder builder, params OptionValue[] optionValues) => builder.Add(new SelectOption(optionValues));
-//     // public static Option Select(this QueryBuilder builder, string optionValue, Func<QueryBuilder, Option>? nested = null) => builder.Add(new SelectOption(optionValue, nested?.Invoke(new QueryBuilder())));
-//     // public static Option Select(this Option builder, params string[] optionValues) => builder.Add(new SelectOption(optionValues));
-//     // public static Option Select(this Option builder, string optionValue, Func<QueryBuilder, Option>? nested = null) => builder.Add(new SelectOption(optionValue, nested?.Invoke(new QueryBuilder())));
+    /// <inheritdoc cref="Expand(string, OptionValue[])" />
+    /// <param name="target">The value the nested option applies to.</param>
+    /// <param name="optionValues">The navigation properties to expand within <paramref name="target"/>.</param>
+    public static OptionValue Expand(this OptionValue target, params OptionValue[] optionValues)
+        => target.Nest("expand", optionValues);
 
-//     public static Option Expand(this QueryBuilder builder, params OptionValue[] optionValues)
-//     {
-//         var option = new ExpandOption(optionValues);
-//         builder.Add(option);
-//         return option;
-//     }
+    /// <summary>Scopes a <c>$filter</c> to a property.</summary>
+    /// <param name="property">The navigation property the nested option applies to.</param>
+    /// <param name="optionValues">The filter expressions to apply within <paramref name="property"/>.</param>
+    public static OptionValue Filter(this string property, params OptionValue[] optionValues)
+        => new OptionValue(property).Filter(optionValues);
 
+    /// <inheritdoc cref="Filter(string, OptionValue[])" />
+    /// <param name="target">The value the nested option applies to.</param>
+    /// <param name="optionValues">The filter expressions to apply within <paramref name="target"/>.</param>
+    public static OptionValue Filter(this OptionValue target, params OptionValue[] optionValues)
+        => target.Nest("filter", optionValues);
 
-//     public static Option OrderBy(this QueryBuilder builder, params OptionValue[] optionValues)
-//     {
-//         var option = new OrderByOption(optionValues);
-//         builder.Add(option);
-//         return option;
-//     }
-//     public static OptionValue Expand(this string targetOptionValue, params OptionValue[] optionValues)
-//         => new(targetOptionValue, new ExpandOption(optionValues));
+    /// <summary>Scopes an ascending <c>$orderby</c> to a property.</summary>
+    /// <param name="property">The navigation property the nested option applies to.</param>
+    /// <param name="optionValues">The properties to order by within <paramref name="property"/>.</param>
+    public static OptionValue OrderBy(this string property, params OptionValue[] optionValues)
+        => new OptionValue(property).OrderBy(optionValues);
 
-//     // public static Option Filter(this QueryBuilder builder, params string[] optionValues) => builder.Add(new FilterOption(optionValues));
-//     // public static Option Filter(this Option builder, params string[] optionValues) => builder.Add(new FilterOption(optionValues));
+    /// <inheritdoc cref="OrderBy(string, OptionValue[])" />
+    /// <param name="target">The value the nested option applies to.</param>
+    /// <param name="optionValues">The properties to order by within <paramref name="target"/>.</param>
+    public static OptionValue OrderBy(this OptionValue target, params OptionValue[] optionValues)
+        => target.Nest("orderby", optionValues);
 
-//     // // public static Option Expand(this QueryBuilder builder, params string[] optionValues, Func<QueryBuilder, Option>? nested = null) => builder.Add(new ExpandOption(optionValues, nested?.Invoke(new QueryBuilder())));
-//     // // public static Option Expand(this Option builder, params string[] optionValues, Func<QueryBuilder, Option>? nested = null) => builder.Add(new ExpandOption(optionValues, nested?.Invoke(new QueryBuilder())));
+    /// <summary>Scopes a descending <c>$orderby</c> to a property.</summary>
+    /// <param name="property">The navigation property the nested option applies to.</param>
+    /// <param name="optionValues">The properties to order by within <paramref name="property"/>.</param>
+    public static OptionValue OrderByDescending(this string property, params OptionValue[] optionValues)
+        => new OptionValue(property).OrderByDescending(optionValues);
 
-//     // public static Option Count(this QueryBuilder builder) => builder.Add(new CountOption());
-//     // public static Option Count(this Option builder) => builder.Add(new CountOption());
+    /// <inheritdoc cref="OrderByDescending(string, OptionValue[])" />
+    /// <param name="target">The value the nested option applies to.</param>
+    /// <param name="optionValues">The properties to order by within <paramref name="target"/>.</param>
+    public static OptionValue OrderByDescending(this OptionValue target, params OptionValue[] optionValues)
+        => target.Nest("orderby", Descending(optionValues));
 
-//     // public static Option OrderBy(this QueryBuilder builder, string propertyName, Func<QueryBuilder, Option>? nested = null) => builder.Add(new OrderByOption(propertyName, nested?.Invoke(new QueryBuilder())));
-//     // public static Option OrderBy(this Option builder, string propertyName, Func<QueryBuilder, Option>? nested = null) => builder.Add(new OrderByOption(propertyName, nested?.Invoke(new QueryBuilder())));
-//     // public static Option OrderByDescending(this QueryBuilder builder, string propertyName, Func<QueryBuilder, Option>? nested = null) => builder.Add(new OrderByOption(propertyName, nested?.Invoke(new QueryBuilder()), true));
-//     // public static Option OrderByDescending(this Option builder, string propertyName, Func<QueryBuilder, Option>? nested = null) => builder.Add(new OrderByOption(propertyName, nested?.Invoke(new QueryBuilder()), true));
+    /// <summary>Appends <c>desc</c> to each value, as <c>$orderby</c> requires for descending sorts.</summary>
+    internal static OptionValue[] Descending(IEnumerable<OptionValue> optionValues)
+        => [.. optionValues.Select(ov => new OptionValue($"{ov} desc"))];
 
-//     public static string Eq(this string item, string value) => $"{item} eq '{value}'";
-//     public static string Ne(this string item, string value) => $"{item} ne '{value}'";
-//     public static string And(this string item, string value) => $"({item} and '{value}')";
-//     public static string Or(this string item, string value) => $"({item} or '{value}')";
-//     public static string Gt(this string item, string value) => $"{item} gt '{value}'";
-//     public static string Ge(this string item, string value) => $"{item} ge '{value}'";
-//     public static string Lt(this string item, string value) => $"{item} lt '{value}'";
-//     public static string Le(this string item, string value) => $"{item} le '{value}'";
-//     public static string Not(this string item) => $"not {item}";
+    private static OptionValue Nest(this OptionValue target, string name, params OptionValue[] optionValues)
+    {
+        target.NestedOptions.Add(new Option(name, optionValues));
 
-//     public static string Eq(this string item, int value) => $"{item} eq {value}";
-//     public static string Ne(this string item, int value) => $"{item} ne {value}";
-//     public static string Gt(this string item, int value) => $"{item} gt {value}";
-//     public static string Ge(this string item, int value) => $"{item} ge {value}";
-//     public static string Lt(this string item, int value) => $"{item} lt {value}";
-//     public static string Le(this string item, int value) => $"{item} le {value}";
-
-//     public static string Eq(this string item, bool value) => $"{item} eq {value}";
-//     public static string Ne(this string item, bool value) => $"{item} ne {value}";
-// }
-
-// public class FilterOption(params object[] optionValues) : Option(optionValues)
-// {
-//     protected override string Name => "filter";
-// }
-
-// public class ExpandOption(params object[] optionValues) : Option(optionValues)
-// {
-//     public ExpandOption(string targetOptionValue, params OptionValue[] optionValues) : this(new OptionValue(targetOptionValue, new SelectOption(optionValues)))
-//     {
-//     }
-
-//     protected override string Name => "expand";
-// }
-
-// public class SelectOption(params object[] optionValues) : Option(optionValues)
-// {
-//     protected override string Name => "select";
-// }
-
-// public class OrderByOption(params object[] optionValues) : Option(optionValues)
-// {
-//     protected override string Name => "orderby";
-// }
-
-// public class OrderByDescendingOption(params object[] optionValues) : Option(optionValues)
-// {
-//     protected override string Name => "orderby";
-//     protected override string Suffix => " desc";
-// }
-
-// public class CountOption() : Option()
-// {
-//     protected override string Name => "count";
-// }
-
-// public class SkipOption(int value) : Option(value)
-// {
-//     protected override string Name => "skip";
-// }
-
-// public class TopOption(int value) : Option(value)
-// {
-//     protected override string Name => "top";
-// }
+        return target;
+    }
+}

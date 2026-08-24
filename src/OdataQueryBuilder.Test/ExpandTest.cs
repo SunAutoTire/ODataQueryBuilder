@@ -2,7 +2,7 @@
 
 public class ExpandTest
 {
-    [Fact(DisplayName = "Test1: Expand single property")]
+    [Fact(DisplayName = "Expand Single Property")]
     public void Test1()
     {
         var query = new QueryBuilder()
@@ -12,7 +12,7 @@ public class ExpandTest
         Assert.Equal("?$expand=Property", query);
     }
     
-    [Fact(DisplayName = "Test2: Expand multiple properties")]
+    [Fact(DisplayName = "Expand Multiple Properties")]
     public void Test2()
     {
         var query = new QueryBuilder()
@@ -23,7 +23,7 @@ public class ExpandTest
         Assert.Equal("?$expand=Property,AnotherProperty", query);
     }
     
-    [Fact(DisplayName = "Test3: Expand with filter")]
+    [Fact(DisplayName = "Expand With Filter")]
     public void Test3()
     {
         var query = new QueryBuilder()
@@ -35,7 +35,7 @@ public class ExpandTest
         Assert.Equal("?$filter=Property eq 'Value'&$expand=Property,AnotherProperty", query);
     }
 
-    [Fact(DisplayName = "Test4: Expand nested property")]
+    [Fact(DisplayName = "Expand Nested Property")]
     public void Test4()
     {
         var query = new QueryBuilder()
@@ -45,7 +45,7 @@ public class ExpandTest
         Assert.Equal("?$expand=Property($expand=SubProperty)", query);
     }
     
-    [Fact(DisplayName = "Test5: Expand multiple nested properties")]
+    [Fact(DisplayName = "Expand Multiple Nested Properties")]
     public void Test5()
     {
         var query = new QueryBuilder()
@@ -56,7 +56,7 @@ public class ExpandTest
         Assert.Equal("?$expand=Property($expand=SubProperty),AnotherProperty($expand=SubAnotherProperty)", query);
     }
     
-    [Fact(DisplayName = "Test6: Expand nested with filter")]
+    [Fact(DisplayName = "Expand Nested With Filter")]
     public void Test6()
     {
         var query = new QueryBuilder()
@@ -67,4 +67,21 @@ public class ExpandTest
 
         Assert.Equal("?$filter=Property eq 'Value'&$expand=Property($expand=SubProperty),AnotherProperty($expand=SubAnotherProperty)", query);
     }
+
+    #region Reuse
+
+    [Fact(DisplayName = "Nested Options Do Not Leak Between Chains")]
+    public void Test7()
+    {
+        var items = "Items".Expand("Parent");
+
+        var filtered = items.Filter("Total".GreaterThan(100));
+        var ordered = items.OrderBy("Name");
+
+        Assert.Equal("Items($expand=Parent;$filter=Total gt 100)", filtered.ToString());
+        Assert.Equal("Items($expand=Parent;$orderby=Name)", ordered.ToString());
+        Assert.Equal("Items($expand=Parent)", items.ToString());
+    }
+
+    #endregion
 }

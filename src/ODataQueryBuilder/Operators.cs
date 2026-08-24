@@ -1,154 +1,245 @@
-using System.Globalization;
 using System.Numerics;
 
 namespace SunAuto.OData;
 
 /// <summary>
-/// Extension methods that build OData expression fragments from the binary and unary operators.
+/// The OData binary and unary operators, as extension methods that compose into an <see cref="Expression"/>.
 /// </summary>
 /// <remarks>
-/// String arguments to the comparison operators are treated as OData string literals: they are quoted and
-/// any embedded <c>'</c> is escaped. Numeric and boolean arguments are emitted as-is, as are the operands of
-/// the logical operators, which take boolean expressions rather than literals.
+/// <para>
+/// Every operator returns an <see cref="Expression"/> and accepts one, so operators nest without any of them
+/// mistaking another's output for a string literal. Parentheses are added automatically wherever precedence
+/// would otherwise regroup an operand, so <c>"a".Or("b").And("c")</c> yields <c>(a or b) and c</c>. Use
+/// <see cref="Group(Expression)"/> to force parentheses the output would not otherwise need.
+/// </para>
+/// <para>
+/// A <see cref="string"/> argument to a comparison operator is an OData string literal and is quoted;
+/// everywhere else a string is an expression fragment and is emitted verbatim, because no other operator
+/// accepts a string literal as an operand.
+/// </para>
 /// </remarks>
 public static class Operators
 {
     #region Comparison operators
 
-    /// <summary>Builds <c>{property} eq {value}</c>.</summary>
-    public static string Equal(this string property, string value) => Binary(property, "eq", Quote(value));
+    /// <summary>Builds <c>{left} eq {right}</c>, quoting <paramref name="value"/> as a string literal.</summary>
+    public static Expression Equal(this Expression left, string value) => Compare(left, "eq", Expression.Literal(value));
 
-    /// <inheritdoc cref="Equal(string, string)" />
-    public static string Equal<T>(this string property, T value) where T : INumber<T> => Binary(property, "eq", Number(value));
+    /// <summary>Builds <c>{left} eq {right}</c>, emitting <paramref name="value"/> verbatim.</summary>
+    public static Expression Equal(this Expression left, Expression value) => Compare(left, "eq", value);
 
-    /// <inheritdoc cref="Equal(string, string)" />
-    public static string Equal(this string property, bool value) => Binary(property, "eq", Bool(value));
+    /// <inheritdoc cref="Equal(Expression, string)" />
+    public static Expression Equal(this string left, string value) => Compare(left, "eq", Expression.Literal(value));
 
-    /// <summary>Builds <c>{property} ne {value}</c>.</summary>
-    public static string NotEqual(this string property, string value) => Binary(property, "ne", Quote(value));
+    /// <inheritdoc cref="Equal(Expression, Expression)" />
+    public static Expression Equal(this string left, Expression value) => Compare(left, "eq", value);
 
-    /// <inheritdoc cref="NotEqual(string, string)" />
-    public static string NotEqual<T>(this string property, T value) where T : INumber<T> => Binary(property, "ne", Number(value));
+    /// <summary>Builds <c>{left} ne {right}</c>, quoting <paramref name="value"/> as a string literal.</summary>
+    public static Expression NotEqual(this Expression left, string value) => Compare(left, "ne", Expression.Literal(value));
 
-    /// <inheritdoc cref="NotEqual(string, string)" />
-    public static string NotEqual(this string property, bool value) => Binary(property, "ne", Bool(value));
+    /// <summary>Builds <c>{left} ne {right}</c>, emitting <paramref name="value"/> verbatim.</summary>
+    public static Expression NotEqual(this Expression left, Expression value) => Compare(left, "ne", value);
 
-    /// <summary>Builds <c>{property} gt {value}</c>.</summary>
-    public static string GreaterThan(this string property, string value) => Binary(property, "gt", Quote(value));
+    /// <inheritdoc cref="NotEqual(Expression, string)" />
+    public static Expression NotEqual(this string left, string value) => Compare(left, "ne", Expression.Literal(value));
 
-    /// <inheritdoc cref="GreaterThan(string, string)" />
-    public static string GreaterThan<T>(this string property, T value) where T : INumber<T> => Binary(property, "gt", Number(value));
+    /// <inheritdoc cref="NotEqual(Expression, Expression)" />
+    public static Expression NotEqual(this string left, Expression value) => Compare(left, "ne", value);
 
-    /// <summary>Builds <c>{property} ge {value}</c>.</summary>
-    public static string GreaterThanOrEqual(this string property, string value) => Binary(property, "ge", Quote(value));
+    /// <summary>Builds <c>{left} gt {right}</c>, quoting <paramref name="value"/> as a string literal.</summary>
+    public static Expression GreaterThan(this Expression left, string value) => Compare(left, "gt", Expression.Literal(value));
 
-    /// <inheritdoc cref="GreaterThanOrEqual(string, string)" />
-    public static string GreaterThanOrEqual<T>(this string property, T value) where T : INumber<T> => Binary(property, "ge", Number(value));
+    /// <summary>Builds <c>{left} gt {right}</c>, emitting <paramref name="value"/> verbatim.</summary>
+    public static Expression GreaterThan(this Expression left, Expression value) => Compare(left, "gt", value);
 
-    /// <summary>Builds <c>{property} lt {value}</c>.</summary>
-    public static string LessThan(this string property, string value) => Binary(property, "lt", Quote(value));
+    /// <inheritdoc cref="GreaterThan(Expression, string)" />
+    public static Expression GreaterThan(this string left, string value) => Compare(left, "gt", Expression.Literal(value));
 
-    /// <inheritdoc cref="LessThan(string, string)" />
-    public static string LessThan<T>(this string property, T value) where T : INumber<T> => Binary(property, "lt", Number(value));
+    /// <inheritdoc cref="GreaterThan(Expression, Expression)" />
+    public static Expression GreaterThan(this string left, Expression value) => Compare(left, "gt", value);
 
-    /// <summary>Builds <c>{property} le {value}</c>.</summary>
-    public static string LessThanOrEqual(this string property, string value) => Binary(property, "le", Quote(value));
+    /// <summary>Builds <c>{left} ge {right}</c>, quoting <paramref name="value"/> as a string literal.</summary>
+    public static Expression GreaterThanOrEqual(this Expression left, string value) => Compare(left, "ge", Expression.Literal(value));
 
-    /// <inheritdoc cref="LessThanOrEqual(string, string)" />
-    public static string LessThanOrEqual<T>(this string property, T value) where T : INumber<T> => Binary(property, "le", Number(value));
+    /// <summary>Builds <c>{left} ge {right}</c>, emitting <paramref name="value"/> verbatim.</summary>
+    public static Expression GreaterThanOrEqual(this Expression left, Expression value) => Compare(left, "ge", value);
+
+    /// <inheritdoc cref="GreaterThanOrEqual(Expression, string)" />
+    public static Expression GreaterThanOrEqual(this string left, string value) => Compare(left, "ge", Expression.Literal(value));
+
+    /// <inheritdoc cref="GreaterThanOrEqual(Expression, Expression)" />
+    public static Expression GreaterThanOrEqual(this string left, Expression value) => Compare(left, "ge", value);
+
+    /// <summary>Builds <c>{left} lt {right}</c>, quoting <paramref name="value"/> as a string literal.</summary>
+    public static Expression LessThan(this Expression left, string value) => Compare(left, "lt", Expression.Literal(value));
+
+    /// <summary>Builds <c>{left} lt {right}</c>, emitting <paramref name="value"/> verbatim.</summary>
+    public static Expression LessThan(this Expression left, Expression value) => Compare(left, "lt", value);
+
+    /// <inheritdoc cref="LessThan(Expression, string)" />
+    public static Expression LessThan(this string left, string value) => Compare(left, "lt", Expression.Literal(value));
+
+    /// <inheritdoc cref="LessThan(Expression, Expression)" />
+    public static Expression LessThan(this string left, Expression value) => Compare(left, "lt", value);
+
+    /// <summary>Builds <c>{left} le {right}</c>, quoting <paramref name="value"/> as a string literal.</summary>
+    public static Expression LessThanOrEqual(this Expression left, string value) => Compare(left, "le", Expression.Literal(value));
+
+    /// <summary>Builds <c>{left} le {right}</c>, emitting <paramref name="value"/> verbatim.</summary>
+    public static Expression LessThanOrEqual(this Expression left, Expression value) => Compare(left, "le", value);
+
+    /// <inheritdoc cref="LessThanOrEqual(Expression, string)" />
+    public static Expression LessThanOrEqual(this string left, string value) => Compare(left, "le", Expression.Literal(value));
+
+    /// <inheritdoc cref="LessThanOrEqual(Expression, Expression)" />
+    public static Expression LessThanOrEqual(this string left, Expression value) => Compare(left, "le", value);
 
     /// <summary>
     /// Builds <c>{property} has {flag}</c>. The flag is emitted verbatim because an OData enumeration member
     /// is written as a qualified type name followed by a quoted member (e.g. <c>Sales.Color'Yellow'</c>).
     /// </summary>
-    public static string Has(this string property, string flag) => Binary(property, "has", flag);
+    public static Expression Has(this Expression property, Expression flag) => Compare(property, "has", flag);
 
-    /// <summary>Builds <c>{property} in ({values})</c>. Requires OData 4.01.</summary>
-    public static string In(this string property, params string[] values)
-        => Binary(property, "in", $"({string.Join(',', values.Select(Quote))})");
+    /// <inheritdoc cref="Has(Expression, Expression)" />
+    public static Expression Has(this string property, Expression flag) => Compare(property, "has", flag);
 
-    /// <inheritdoc cref="In(string, string[])" />
-    public static string In<T>(this string property, params T[] values) where T : INumber<T>
-        => Binary(property, "in", $"({string.Join(',', values.Select(Number))})");
+    /// <summary>Builds <c>{property} in ({values})</c>, quoting each value as a string literal. Requires OData 4.01.</summary>
+    public static Expression In(this Expression property, params string[] values)
+        => Compare(property, "in", Expression.List(values.Select(Expression.Literal)));
+
+    /// <summary>Builds <c>{property} in ({values})</c>, emitting each value verbatim. Requires OData 4.01.</summary>
+    public static Expression In(this Expression property, params Expression[] values)
+        => Compare(property, "in", Expression.List(values));
+
+    /// <inheritdoc cref="In(Expression, string[])" />
+    public static Expression In(this string property, params string[] values)
+        => Compare(property, "in", Expression.List(values.Select(Expression.Literal)));
+
+    /// <inheritdoc cref="In(Expression, Expression[])" />
+    public static Expression In(this string property, params Expression[] values)
+        => Compare(property, "in", Expression.List(values));
 
     #endregion
 
     #region Logical operators
 
     /// <summary>Builds <c>{left} and {right}</c> from two boolean expressions.</summary>
-    public static string And(this string left, string right) => Binary(left, "and", right);
+    public static Expression And(this Expression left, Expression right)
+        => Expression.Binary(left, "and", right, Precedence.And);
+
+    /// <inheritdoc cref="And(Expression, Expression)" />
+    public static Expression And(this string left, Expression right)
+        => Expression.Binary(left, "and", right, Precedence.And);
 
     /// <summary>Builds <c>{left} or {right}</c> from two boolean expressions.</summary>
-    public static string Or(this string left, string right) => Binary(left, "or", right);
+    public static Expression Or(this Expression left, Expression right)
+        => Expression.Binary(left, "or", right, Precedence.Or);
+
+    /// <inheritdoc cref="Or(Expression, Expression)" />
+    public static Expression Or(this string left, Expression right)
+        => Expression.Binary(left, "or", right, Precedence.Or);
 
     /// <summary>Builds <c>not {expression}</c>.</summary>
-    public static string Not(this string expression) => $"not {expression}";
+    public static Expression Not(this Expression expression) => Expression.Unary("not", expression);
+
+    /// <inheritdoc cref="Not(Expression)" />
+    public static Expression Not(this string expression) => Expression.Unary("not", expression);
 
     #endregion
 
     #region Arithmetic operators
 
     /// <summary>Builds <c>{left} add {right}</c>.</summary>
-    public static string Add<TLeft, TRight>(this TLeft left, TRight right)
-        where TLeft : INumber<TLeft> where TRight : INumber<TRight> => Arithmetic(left, "add", right);
+    public static Expression Add(this Expression left, Expression right) => Arithmetic(left, "add", right);
+
+    /// <inheritdoc cref="Add(Expression, Expression)" />
+    public static Expression Add(this string left, Expression right) => Arithmetic(left, "add", right);
+
+    /// <inheritdoc cref="Add(Expression, Expression)" />
+    public static Expression Add<TLeft>(this TLeft left, Expression right) where TLeft : INumber<TLeft>
+        => Arithmetic(Expression.From(left), "add", right);
 
     /// <summary>Builds <c>{left} sub {right}</c>.</summary>
-    public static string Subtract<TLeft, TRight>(this TLeft left, TRight right)
-        where TLeft : INumber<TLeft> where TRight : INumber<TRight> => Arithmetic(left, "sub", right);
+    public static Expression Subtract(this Expression left, Expression right) => Arithmetic(left, "sub", right);
+
+    /// <inheritdoc cref="Subtract(Expression, Expression)" />
+    public static Expression Subtract(this string left, Expression right) => Arithmetic(left, "sub", right);
+
+    /// <inheritdoc cref="Subtract(Expression, Expression)" />
+    public static Expression Subtract<TLeft>(this TLeft left, Expression right) where TLeft : INumber<TLeft>
+        => Arithmetic(Expression.From(left), "sub", right);
 
     /// <summary>Builds <c>{left} mul {right}</c>.</summary>
-    public static string Multiply<TLeft, TRight>(this TLeft left, TRight right)
-        where TLeft : INumber<TLeft> where TRight : INumber<TRight> => Arithmetic(left, "mul", right);
+    public static Expression Multiply(this Expression left, Expression right) => Arithmetic(left, "mul", right);
+
+    /// <inheritdoc cref="Multiply(Expression, Expression)" />
+    public static Expression Multiply(this string left, Expression right) => Arithmetic(left, "mul", right);
+
+    /// <inheritdoc cref="Multiply(Expression, Expression)" />
+    public static Expression Multiply<TLeft>(this TLeft left, Expression right) where TLeft : INumber<TLeft>
+        => Arithmetic(Expression.From(left), "mul", right);
 
     /// <summary>Builds <c>{left} div {right}</c>, which is integer division when both operands are integral.</summary>
-    public static string Divide<TLeft, TRight>(this TLeft left, TRight right)
-        where TLeft : INumber<TLeft> where TRight : INumber<TRight> => Arithmetic(left, "div", right);
+    public static Expression Divide(this Expression left, Expression right) => Arithmetic(left, "div", right);
+
+    /// <inheritdoc cref="Divide(Expression, Expression)" />
+    public static Expression Divide(this string left, Expression right) => Arithmetic(left, "div", right);
+
+    /// <inheritdoc cref="Divide(Expression, Expression)" />
+    public static Expression Divide<TLeft>(this TLeft left, Expression right) where TLeft : INumber<TLeft>
+        => Arithmetic(Expression.From(left), "div", right);
 
     /// <summary>Builds <c>{left} divby {right}</c>, which is always fractional division. Requires OData 4.01.</summary>
-    public static string DivideBy<TLeft, TRight>(this TLeft left, TRight right)
-        where TLeft : INumber<TLeft> where TRight : INumber<TRight> => Arithmetic(left, "divby", right);
+    public static Expression DivideBy(this Expression left, Expression right) => Arithmetic(left, "divby", right);
+
+    /// <inheritdoc cref="DivideBy(Expression, Expression)" />
+    public static Expression DivideBy(this string left, Expression right) => Arithmetic(left, "divby", right);
+
+    /// <inheritdoc cref="DivideBy(Expression, Expression)" />
+    public static Expression DivideBy<TLeft>(this TLeft left, Expression right) where TLeft : INumber<TLeft>
+        => Arithmetic(Expression.From(left), "divby", right);
 
     /// <summary>Builds <c>{left} mod {right}</c>.</summary>
-    public static string Modulo<TLeft, TRight>(this TLeft left, TRight right)
-        where TLeft : INumber<TLeft> where TRight : INumber<TRight> => Arithmetic(left, "mod", right);
+    public static Expression Modulo(this Expression left, Expression right) => Arithmetic(left, "mod", right);
+
+    /// <inheritdoc cref="Modulo(Expression, Expression)" />
+    public static Expression Modulo(this string left, Expression right) => Arithmetic(left, "mod", right);
+
+    /// <inheritdoc cref="Modulo(Expression, Expression)" />
+    public static Expression Modulo<TLeft>(this TLeft left, Expression right) where TLeft : INumber<TLeft>
+        => Arithmetic(Expression.From(left), "mod", right);
 
     #endregion
 
     #region Grouping operator
 
-    /// <summary>Wraps an expression in parentheses.</summary>
-    public static string Parenthesis(this string expression) => $"({expression})";
+    /// <summary>Wraps an expression in parentheses that the output would not otherwise need.</summary>
+    public static Expression Group(this Expression expression) => Expression.Grouped(expression);
 
-    /// <inheritdoc cref="Parenthesis(string)" />
-    public static string Parenthesis<T>(this T value) where T : INumber<T> => $"({Number(value)})";
+    /// <inheritdoc cref="Group(Expression)" />
+    public static Expression Group(this string expression) => Expression.Grouped(expression);
+
+    /// <inheritdoc cref="Group(Expression)" />
+    public static Expression Group<T>(this T value) where T : INumber<T> => Expression.Grouped(Expression.From(value));
 
     #endregion
 
-    private static string Binary(string left, string @operator, string right) => $"{left} {@operator} {right}";
-
-    private static string Arithmetic<TLeft, TRight>(TLeft left, string @operator, TRight right)
-        where TLeft : INumber<TLeft> where TRight : INumber<TRight>
-        => Binary(Number(left), @operator, Number(right));
-
-    private static string Quote(string value) => $"'{value.Replace("'", "''")}'";
-
-    private static string Bool(bool value) => value ? "true" : "false";
+    #region Alias operator
 
     /// <summary>
-    /// Formats a number invariantly, keeping floating point values distinguishable from integral ones by
-    /// giving them at least one decimal place (<c>2.0</c> rather than <c>2</c>).
+    /// Builds <c>{expression} as {alias}</c>, the form each <c>$compute</c> item takes. The alias is emitted
+    /// verbatim because it declares a property name rather than supplying a value.
     /// </summary>
-    private static string Number<T>(T value) where T : INumber<T>
-    {
-        var text = value switch
-        {
-            double d => d.ToString("R", CultureInfo.InvariantCulture),
-            float f => f.ToString("R", CultureInfo.InvariantCulture),
-            _ => value.ToString(null, CultureInfo.InvariantCulture) ?? string.Empty,
-        };
+    public static Expression As(this Expression expression, string alias) => Expression.Alias(expression, alias);
 
-        return value is double or float or decimal && text.IndexOf('.') < 0 && text.IndexOf('E') < 0
-            ? $"{text}.0"
-            : text;
-    }
+    /// <inheritdoc cref="As(Expression, string)" />
+    public static Expression As(this string expression, string alias) => Expression.Alias(expression, alias);
+
+    #endregion
+
+    private static Expression Compare(Expression left, string @operator, Expression right)
+        => Expression.Binary(left, @operator, right, Precedence.Comparison);
+
+    private static Expression Arithmetic(Expression left, string @operator, Expression right)
+        => Expression.Binary(left, @operator, right, @operator is "add" or "sub" ? Precedence.Additive : Precedence.Multiplicative);
 }

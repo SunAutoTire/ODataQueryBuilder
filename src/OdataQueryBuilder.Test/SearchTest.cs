@@ -2,7 +2,7 @@
 
 public class SearchTest
 {
-    [Fact(DisplayName = "Test1: Search single value")]
+    [Fact(DisplayName = "Search Single Value")]
     public void Test1()
     {
         var query = new QueryBuilder()

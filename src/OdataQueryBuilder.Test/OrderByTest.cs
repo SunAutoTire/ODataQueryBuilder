@@ -2,7 +2,7 @@
 
 public class OrderByTest
 {
-    [Fact(DisplayName = "Test1: OrderBy single property")]
+    [Fact(DisplayName = "OrderBy Single Property")]
     public void Test1()
     {
         var query = new QueryBuilder()
@@ -12,7 +12,7 @@ public class OrderByTest
         Assert.Equal("?$orderby=Property", query);
     }
     
-    [Fact(DisplayName = "Test2: OrderBy multiple properties")]
+    [Fact(DisplayName = "OrderBy Multiple Properties")]
     public void Test2()
     {
         var query = new QueryBuilder()
@@ -23,7 +23,7 @@ public class OrderByTest
         Assert.Equal("?$orderby=Property,AnotherProperty", query);
     }
     
-    [Fact(DisplayName = "Test3: OrderBy with filter")]
+    [Fact(DisplayName = "OrderBy With Filter")]
     public void Test3()
     {
         var query = new QueryBuilder()
@@ -35,7 +35,7 @@ public class OrderByTest
         Assert.Equal("?$filter=Property eq 'Value'&$orderby=Property,AnotherProperty", query);
     }
     
-    [Fact(DisplayName = "Test4: OrderByDescending single property")]
+    [Fact(DisplayName = "OrderByDescending Single Property")]
     public void Test4()
     {
         var query = new QueryBuilder()
@@ -45,7 +45,7 @@ public class OrderByTest
         Assert.Equal("?$orderby=Property desc", query);
     }
     
-    [Fact(DisplayName = "Test5: OrderBy then OrderByDescending")]
+    [Fact(DisplayName = "OrderBy Then OrderByDescending")]
     public void Test5()
     {
         var query = new QueryBuilder()
@@ -56,7 +56,7 @@ public class OrderByTest
         Assert.Equal("?$orderby=Property,AnotherProperty desc", query);
     }
     
-    [Fact(DisplayName = "Test6: OrderByDescending with filter")]
+    [Fact(DisplayName = "OrderByDescending With Filter")]
     public void Test6()
     {
         var query = new QueryBuilder()

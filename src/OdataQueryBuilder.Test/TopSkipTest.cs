@@ -2,7 +2,7 @@
 
 public class TopSkipTest
 {
-    [Fact(DisplayName = "Test1: Top single value")]
+    [Fact(DisplayName = "Top Single Value")]
     public void Test1()
     {
         var query = new QueryBuilder()
@@ -12,7 +12,7 @@ public class TopSkipTest
         Assert.Equal("?$top=5", query);
     }
 
-    [Fact(DisplayName = "Test2: Top and Skip")]
+    [Fact(DisplayName = "Top And Skip")]
     public void Test2()
     {
         var query = new QueryBuilder()
@@ -23,7 +23,7 @@ public class TopSkipTest
         Assert.Equal("?$top=5&$skip=2", query);
     }
 
-    [Fact(DisplayName = "Test3: Skip single value")]
+    [Fact(DisplayName = "Skip Single Value")]
     public void Test3()
     {
         var query = new QueryBuilder()
@@ -33,7 +33,7 @@ public class TopSkipTest
         Assert.Equal("?$skip=2", query);
     }
 
-    [Fact(DisplayName = "Test4: Count")]
+    [Fact(DisplayName = "Count")]
     public void Test4()
     {
         var query = new QueryBuilder()

@@ -70,14 +70,22 @@ public static class Extensions
     public static OptionValue OrderByDescending(this OptionValue target, params OptionValue[] optionValues)
         => target.Nest("orderby", Descending(optionValues));
 
+    /// <summary>Scopes a <c>$compute</c> to a property.</summary>
+    /// <param name="property">The navigation property the nested option applies to.</param>
+    /// <param name="optionValues">The compute expressions to evaluate within <paramref name="property"/>.</param>
+    public static OptionValue Compute(this string property, params OptionValue[] optionValues)
+        => new OptionValue(property).Compute(optionValues);
+
+    /// <inheritdoc cref="Compute(string, OptionValue[])" />
+    /// <param name="target">The value the nested option applies to.</param>
+    /// <param name="optionValues">The compute expressions to evaluate within <paramref name="target"/>.</param>
+    public static OptionValue Compute(this OptionValue target, params OptionValue[] optionValues)
+        => target.Nest("compute", optionValues);
+
     /// <summary>Appends <c>desc</c> to each value, as <c>$orderby</c> requires for descending sorts.</summary>
     internal static OptionValue[] Descending(IEnumerable<OptionValue> optionValues)
         => [.. optionValues.Select(ov => new OptionValue($"{ov} desc"))];
 
     private static OptionValue Nest(this OptionValue target, string name, params OptionValue[] optionValues)
-    {
-        target.NestedOptions.Add(new Option(name, optionValues));
-
-        return target;
-    }
+        => new(target.Value, [.. target.NestedOptions, new Option(name, optionValues)]);
 }

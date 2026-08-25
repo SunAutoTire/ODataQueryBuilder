@@ -103,6 +103,20 @@ public static class Transformations
     /// <inheritdoc cref="TopSum(int, Expression)" />
     public static Expression BottomSum(int sum, Expression expression) => Call("bottomsum", sum, expression);
 
+    /// <summary>
+    /// Chains transformations into the single <c>/</c>-separated sequence that <c>concat</c> and
+    /// <c>groupby</c> take as one argument.
+    /// </summary>
+    /// <param name="transformations">The transformations to chain.</param>
+    public static Expression Sequence(params Expression[] transformations) => new(Chain(transformations));
+
+    /// <summary>
+    /// Builds <c>concat({sequences})</c>, combining the results of several transformation sequences. Chain a
+    /// multi-step sequence with <see cref="Sequence" /> before passing it here.
+    /// </summary>
+    /// <param name="sequences">The transformation sequences to combine.</param>
+    public static Expression Concat(params Expression[] sequences) => Call("concat", sequences);
+
     #endregion
 
     /// <summary>Joins transformations into the <c>/</c>-separated sequence <c>$apply</c> takes.</summary>

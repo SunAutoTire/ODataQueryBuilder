@@ -109,6 +109,20 @@ public class ApplyTest
         Assert.Equal("?$apply=filter(Amount gt 10)/aggregate(Amount with sum as Total)", query);
     }
 
+    [Fact(DisplayName = "Concat Combines Transformation Sequences")]
+    public void Test12()
+    {
+        var query = new QueryBuilder()
+            .Apply(Concat(
+                Sequence(Transformations.Filter("Amount".GreaterThan(10)), Aggregate(Sum("Amount", "Total"))),
+                Aggregate(Count("All"))))
+            .Build();
+
+        Assert.Equal(
+            "?$apply=concat(filter(Amount gt 10)/aggregate(Amount with sum as Total),aggregate($count as All))",
+            query);
+    }
+
     [Theory(DisplayName = "Apply Conditional")]
     [InlineData(true)]
     [InlineData(false)]

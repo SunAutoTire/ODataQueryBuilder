@@ -34,11 +34,19 @@ public class QueryBuilder(params string?[] routeSegments)
     private const string TopName = "top";
     private const string SkipName = "skip";
     private const string CountName = "count";
+    private const string IndexName = "index";
+    private const string SchemaVersionName = "schemaversion";
+    private const string FormatName = "format";
+    private const string IdName = "id";
 
     private static readonly string[] RenderOrder =
-        [ApplyName, ComputeName, FilterName, SearchName, SelectName, ExpandName, OrderByName, TopName, SkipName, CountName];
+    [
+        IdName, ApplyName, ComputeName, FilterName, SearchName, SelectName, ExpandName, OrderByName,
+        TopName, SkipName, CountName, IndexName, SchemaVersionName, FormatName,
+    ];
 
     private readonly List<Option> options = [];
+    private readonly List<(string Name, string Value)> parameters = [];
     private readonly List<string> segments = [.. routeSegments.Where(rs => !string.IsNullOrWhiteSpace(rs)).Select(rs => rs!)];
 
     private Expression? filter;
@@ -233,7 +241,7 @@ public class QueryBuilder(params string?[] routeSegments)
 
     #endregion
 
-    #region $search, $top, $skip, $count
+    #region $search, $top, $skip, $count, $format, $index, $schemaversion, $id
 
     /// <summary>Sets <c>$search</c>.</summary>
     /// <param name="expression">The free-text search expression.</param>
@@ -269,6 +277,55 @@ public class QueryBuilder(params string?[] routeSegments)
     /// <param name="value">Whether the service should include the total count.</param>
     public QueryBuilder Count(bool value = true) => Replace(CountName, value ? "true" : "false");
 
+    /// <summary>Sets <c>$format</c>, e.g. <c>json</c>, <c>xml</c>, or a full media type.</summary>
+    /// <param name="value">The format abbreviation or media type.</param>
+    public QueryBuilder Format(string value) => Replace(FormatName, Expression.Escape(value));
+
+    /// <summary>Sets <c>$format</c> only when <paramref name="condition"/> holds.</summary>
+    /// <param name="condition">When <see langword="false"/> the value is discarded.</param>
+    /// <param name="value">The format abbreviation or media type.</param>
+    public QueryBuilder FormatIf(bool condition, string value) => condition ? Format(value) : this;
+
+    /// <summary>
+    /// Sets <c>$index</c>, the zero-based position an item is inserted at in an ordered collection.
+    /// Requires OData 4.01.
+    /// </summary>
+    /// <param name="value">The ordinal position.</param>
+    public QueryBuilder Index(int value) => Replace(IndexName, value.ToString(CultureInfo.InvariantCulture));
+
+    /// <summary>Sets <c>$index</c> only when <paramref name="condition"/> holds.</summary>
+    /// <param name="condition">When <see langword="false"/> the value is discarded.</param>
+    /// <param name="value">The ordinal position.</param>
+    public QueryBuilder IndexIf(bool condition, int value) => condition ? Index(value) : this;
+
+    /// <summary>
+    /// Sets <c>$schemaversion</c>, selecting which version of the service's schema to interpret the request
+    /// against. <c>*</c> means the service may use any. Requires OData 4.01.
+    /// </summary>
+    /// <param name="value">The schema version, or <c>*</c>.</param>
+    public QueryBuilder SchemaVersion(string value) => Replace(SchemaVersionName, Expression.Escape(value));
+
+    /// <summary>Sets <c>$schemaversion</c> only when <paramref name="condition"/> holds.</summary>
+    /// <param name="condition">When <see langword="false"/> the value is discarded.</param>
+    /// <param name="value">The schema version, or <c>*</c>.</param>
+    public QueryBuilder SchemaVersionIf(bool condition, string value) => condition ? SchemaVersion(value) : this;
+
+    /// <summary>
+    /// Sets <c>$id</c>, the entity id a request addresses. Used with the <c>$entity</c> segment to read an
+    /// entity by id, and with <c>$ref</c> to add a reference to one.
+    /// </summary>
+    /// <param name="value">The entity id.</param>
+    public QueryBuilder Id(string value) => Replace(IdName, Expression.Escape(value));
+
+    /// <inheritdoc cref="Id(string)" />
+    /// <param name="value">The entity id.</param>
+    public QueryBuilder Id(Uri value) => Id(value.ToString());
+
+    /// <summary>Sets <c>$id</c> only when <paramref name="condition"/> holds.</summary>
+    /// <param name="condition">When <see langword="false"/> the value is discarded.</param>
+    /// <param name="value">The entity id.</param>
+    public QueryBuilder IdIf(bool condition, string value) => condition ? Id(value) : this;
+
     private QueryBuilder Replace(string name, string value)
     {
         Option(name).Set(value);
@@ -278,11 +335,52 @@ public class QueryBuilder(params string?[] routeSegments)
 
     #endregion
 
+    #region Parameter aliases
+
+    /// <summary>
+    /// Declares a parameter alias, rendered as <c>@name=value</c> alongside the system options. Refer to it
+    /// from an expression with <see cref="Expression.Parameter" />. The value is emitted verbatim.
+    /// </summary>
+    /// <param name="name">The alias name, with or without its leading <c>@</c>.</param>
+    /// <param name="value">The value the alias stands for.</param>
+    public QueryBuilder Parameter(string name, Expression value) => SetParameter(name, value.ToString());
+
+    /// <summary>
+    /// Declares a parameter alias whose value is a string literal, rendered as <c>@name='value'</c>.
+    /// </summary>
+    /// <param name="name">The alias name, with or without its leading <c>@</c>.</param>
+    /// <param name="value">The literal the alias stands for.</param>
+    public QueryBuilder Parameter(string name, string value) => SetParameter(name, Expression.Literal(value).ToString());
+
+    private QueryBuilder SetParameter(string name, string value)
+    {
+        var alias = name.TrimStart('@');
+        var existing = parameters.FindIndex(p => p.Name == alias);
+
+        if (existing < 0)
+            parameters.Add((alias, value));
+        else
+            parameters[existing] = (alias, value);
+
+        return this;
+    }
+
+    #endregion
+
     /// <summary>Renders the route and query string.</summary>
     /// <returns>The query, or <see cref="Route"/> alone when no options were added.</returns>
-    public string Build() => options.Count == 0
-        ? Route
-        : $"{Route}?{string.Join('&', options.OrderBy(RenderIndex))}";
+    public string Build()
+    {
+        if (options.Count == 0 && parameters.Count == 0)
+            return Route;
+
+        var rendered = options
+            .OrderBy(RenderIndex)
+            .Select(option => option.ToString())
+            .Concat(parameters.Select(parameter => $"@{parameter.Name}={parameter.Value}"));
+
+        return $"{Route}?{string.Join('&', rendered)}";
+    }
 
     /// <summary>
     /// Renders the query as a <see cref="Uri"/>, which percent-encodes the characters that are merely invalid

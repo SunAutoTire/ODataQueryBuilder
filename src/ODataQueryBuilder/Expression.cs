@@ -255,6 +255,13 @@ public readonly struct Expression
         => new($"binary'{Convert.ToBase64String(value).Replace('+', '-').Replace('/', '_')}'", Precedence.Primary);
 
     /// <summary>
+    /// Builds a reference to a parameter alias, as in <c>Name eq @p1</c>. Declare the value it stands for
+    /// with <see cref="QueryBuilder.Parameter(string, Expression)" />.
+    /// </summary>
+    /// <param name="name">The alias name, with or without its leading <c>@</c>.</param>
+    public static Expression Parameter(string name) => new($"@{name.TrimStart('@')}", Precedence.Primary);
+
+    /// <summary>
     /// Builds an enumeration member literal, written as a namespace-qualified type name followed by the
     /// member in quotes (e.g. <c>Sales.Color'Yellow'</c>).
     /// </summary>

@@ -6,7 +6,7 @@
     <AssemblyName>SunAuto.OData.QueryBuilder</AssemblyName>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <PackageId>ODataQueryBuilder</PackageId>
+    <PackageId>SunAuto.OData.QueryBuilder</PackageId>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>

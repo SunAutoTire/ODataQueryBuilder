@@ -33,7 +33,7 @@ jobs:
           dotnet-version: '8.0.x'
 
       - name: Restore
-        run: dotnet restore
+        run: dotnet restore src/ODataQueryBuilder/ODataQueryBuilder.csproj
 
       - name: Build
         run: dotnet build src/ODataQueryBuilder/ODataQueryBuilder.csproj --configuration Release --no-restore

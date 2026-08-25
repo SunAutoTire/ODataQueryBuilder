@@ -24,6 +24,7 @@ namespace SunAuto.OData;
 /// </remarks>
 public class QueryBuilder(params string?[] routeSegments)
 {
+    private const string ApplyName = "apply";
     private const string ComputeName = "compute";
     private const string FilterName = "filter";
     private const string SearchName = "search";
@@ -35,14 +36,102 @@ public class QueryBuilder(params string?[] routeSegments)
     private const string CountName = "count";
 
     private static readonly string[] RenderOrder =
-        [ComputeName, FilterName, SearchName, SelectName, ExpandName, OrderByName, TopName, SkipName, CountName];
+        [ApplyName, ComputeName, FilterName, SearchName, SelectName, ExpandName, OrderByName, TopName, SkipName, CountName];
 
     private readonly List<Option> options = [];
+    private readonly List<string> segments = [.. routeSegments.Where(rs => !string.IsNullOrWhiteSpace(rs)).Select(rs => rs!)];
 
     private Expression? filter;
+    private string? apply;
 
     /// <summary>Gets the route the query string is appended to; empty when no segments were supplied.</summary>
-    public string Route { get; } = string.Join('/', routeSegments.Where(rs => !string.IsNullOrWhiteSpace(rs)));
+    public string Route => string.Join('/', segments);
+
+    #region Route
+
+    /// <summary>
+    /// Appends route segments. Use it for the path-only resources too: <c>Segment("$count")</c>,
+    /// <c>Segment("$value")</c> and <c>Segment("$ref")</c>.
+    /// </summary>
+    /// <param name="additional">The segments to append.</param>
+    public QueryBuilder Segment(params string?[] additional)
+    {
+        segments.AddRange(additional.Where(s => !string.IsNullOrWhiteSpace(s)).Select(s => s!));
+
+        return this;
+    }
+
+    /// <summary>Addresses a single entity by a string key, as in <c>Products('Milk')</c>.</summary>
+    /// <param name="value">The key, quoted as a string literal.</param>
+    public QueryBuilder Key(string value) => AppendKey(Expression.Literal(value).ToString());
+
+    /// <summary>Addresses a single entity by key, as in <c>Products(1)</c>.</summary>
+    /// <param name="value">The key, emitted verbatim.</param>
+    public QueryBuilder Key(Expression value) => AppendKey(value.ToString());
+
+    /// <summary>Addresses a single entity by a named string key, as in <c>Products(Name='Milk')</c>.</summary>
+    /// <param name="name">The key property name.</param>
+    /// <param name="value">The key, quoted as a string literal.</param>
+    public QueryBuilder Key(string name, string value) => AppendKey($"{name}={Expression.Literal(value)}");
+
+    /// <summary>Addresses a single entity by a named key, as in <c>Products(Id=1)</c>.</summary>
+    /// <param name="name">The key property name.</param>
+    /// <param name="value">The key, emitted verbatim.</param>
+    public QueryBuilder Key(string name, Expression value) => AppendKey($"{name}={value}");
+
+    /// <summary>
+    /// Addresses a single entity by a composite key, as in <c>Products(CategoryId=1,Name='Milk')</c>.
+    /// </summary>
+    /// <param name="parts">The key parts. Quote string values with <see cref="Expression.Literal" />.</param>
+    public QueryBuilder Key(params (string Name, Expression Value)[] parts)
+        => AppendKey(string.Join(',', parts.Select(p => $"{p.Name}={p.Value}")));
+
+    private QueryBuilder AppendKey(string key)
+    {
+        if (segments.Count == 0)
+            throw new InvalidOperationException("A key predicate needs an entity set to address; add a route segment first.");
+
+        segments[^1] += $"({key})";
+
+        return this;
+    }
+
+    #endregion
+
+    #region $apply
+
+    /// <summary>
+    /// Adds one or more <c>$apply</c> transformations, chained onto any already added with <c>/</c>. Build
+    /// them with <see cref="Transformations" />. Requires the Data Aggregation extension.
+    /// </summary>
+    /// <param name="transformations">The transformations.</param>
+    public QueryBuilder Apply(params Expression[] transformations)
+    {
+        foreach (var transformation in transformations)
+            AddApply(transformation);
+
+        return this;
+    }
+
+    /// <summary>Adds one or more <c>$apply</c> transformations only when <paramref name="condition"/> holds.</summary>
+    /// <param name="condition">When <see langword="false"/> the transformations are discarded.</param>
+    /// <param name="transformations">The transformations.</param>
+    public QueryBuilder ApplyIf(bool condition, params Expression[] transformations)
+        => condition ? Apply(transformations) : this;
+
+    private void AddApply(Expression transformation)
+    {
+        var text = transformation.ToString();
+
+        if (string.IsNullOrWhiteSpace(text))
+            return;
+
+        apply = apply is null ? text : $"{apply}/{text}";
+
+        Option(ApplyName).Set(apply);
+    }
+
+    #endregion
 
     #region $filter
 

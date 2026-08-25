@@ -34,6 +34,12 @@ public static class Operators
     /// <inheritdoc cref="Equal(Expression, Expression)" />
     public static Expression Equal(this string left, Expression value) => Compare(left, "eq", value);
 
+    /// <summary>Builds <c>{left} eq {right}</c> from a boolean literal.</summary>
+    public static Expression Equal(this Expression left, bool value) => Compare(left, "eq", Expression.From(value));
+
+    /// <inheritdoc cref="Equal(Expression, bool)" />
+    public static Expression Equal(this string left, bool value) => Compare(left, "eq", Expression.From(value));
+
     /// <summary>Builds <c>{left} ne {right}</c>, quoting <paramref name="value"/> as a string literal.</summary>
     public static Expression NotEqual(this Expression left, string value) => Compare(left, "ne", Expression.Literal(value));
 
@@ -45,6 +51,12 @@ public static class Operators
 
     /// <inheritdoc cref="NotEqual(Expression, Expression)" />
     public static Expression NotEqual(this string left, Expression value) => Compare(left, "ne", value);
+
+    /// <summary>Builds <c>{left} ne {right}</c> from a boolean literal.</summary>
+    public static Expression NotEqual(this Expression left, bool value) => Compare(left, "ne", Expression.From(value));
+
+    /// <inheritdoc cref="NotEqual(Expression, bool)" />
+    public static Expression NotEqual(this string left, bool value) => Compare(left, "ne", Expression.From(value));
 
     /// <summary>Builds <c>{left} gt {right}</c>, quoting <paramref name="value"/> as a string literal.</summary>
     public static Expression GreaterThan(this Expression left, string value) => Compare(left, "gt", Expression.Literal(value));
@@ -221,6 +233,23 @@ public static class Operators
 
     /// <inheritdoc cref="Group(Expression)" />
     public static Expression Group<T>(this T value) where T : INumber<T> => Expression.Grouped(Expression.From(value));
+
+    #endregion
+
+    #region Path operator
+
+    /// <summary>
+    /// Builds <c>{head}/{segments}</c>, navigating into a complex type, a navigation property, or a range
+    /// variable bound by <see cref="Functions.Any(Expression, string, Expression)"/>.
+    /// </summary>
+    /// <param name="head">The expression to navigate from.</param>
+    /// <param name="segments">The path segments, joined with <c>/</c>.</param>
+    public static Expression Path(this Expression head, params string[] segments)
+        => new($"{head}/{string.Join('/', segments)}");
+
+    /// <inheritdoc cref="Path(Expression, string[])" />
+    public static Expression Path(this string head, params string[] segments)
+        => new($"{head}/{string.Join('/', segments)}");
 
     #endregion
 

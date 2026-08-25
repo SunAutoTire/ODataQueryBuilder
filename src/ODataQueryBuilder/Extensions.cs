@@ -82,6 +82,72 @@ public static class Extensions
     public static OptionValue Compute(this OptionValue target, params OptionValue[] optionValues)
         => target.Nest("compute", optionValues);
 
+    /// <summary>Scopes a <c>$top</c> to a property.</summary>
+    /// <param name="property">The navigation property the nested option applies to.</param>
+    /// <param name="value">The maximum number of items to return.</param>
+    public static OptionValue Top(this string property, int value) => new OptionValue(property).Top(value);
+
+    /// <inheritdoc cref="Top(string, int)" />
+    /// <param name="target">The value the nested option applies to.</param>
+    /// <param name="value">The maximum number of items to return.</param>
+    public static OptionValue Top(this OptionValue target, int value) => target.Nest("top", Number(value));
+
+    /// <summary>Scopes a <c>$skip</c> to a property.</summary>
+    /// <param name="property">The navigation property the nested option applies to.</param>
+    /// <param name="value">The number of items to skip.</param>
+    public static OptionValue Skip(this string property, int value) => new OptionValue(property).Skip(value);
+
+    /// <inheritdoc cref="Skip(string, int)" />
+    /// <param name="target">The value the nested option applies to.</param>
+    /// <param name="value">The number of items to skip.</param>
+    public static OptionValue Skip(this OptionValue target, int value) => target.Nest("skip", Number(value));
+
+    /// <summary>
+    /// Scopes a <c>$count</c> to a property. The argument is required rather than defaulted, because
+    /// <c>"Items".Count()</c> would bind to <see cref="System.Linq.Enumerable.Count{T}(IEnumerable{T})"/> and
+    /// silently count the characters of the string instead.
+    /// </summary>
+    /// <param name="property">The navigation property the nested option applies to.</param>
+    /// <param name="value">Whether the service should include the count of the expanded collection.</param>
+    public static OptionValue Count(this string property, bool value) => new OptionValue(property).Count(value);
+
+    /// <inheritdoc cref="Count(string, bool)" />
+    /// <param name="target">The value the nested option applies to.</param>
+    /// <param name="value">Whether the service should include the count of the expanded collection.</param>
+    public static OptionValue Count(this OptionValue target, bool value)
+        => target.Nest("count", value ? "true" : "false");
+
+    /// <summary>Scopes a <c>$search</c> to a property.</summary>
+    /// <param name="property">The navigation property the nested option applies to.</param>
+    /// <param name="expression">The free-text search expression.</param>
+    public static OptionValue Search(this string property, string expression) => new OptionValue(property).Search(expression);
+
+    /// <inheritdoc cref="Search(string, string)" />
+    /// <param name="target">The value the nested option applies to.</param>
+    /// <param name="expression">The free-text search expression.</param>
+    public static OptionValue Search(this OptionValue target, string expression)
+        => target.Nest("search", Expression.Escape(expression));
+
+    /// <summary>Scopes a <c>$levels</c> to a property, expanding a hierarchy to a fixed depth.</summary>
+    /// <param name="property">The navigation property the nested option applies to.</param>
+    /// <param name="value">How many levels deep to expand.</param>
+    public static OptionValue Levels(this string property, int value) => new OptionValue(property).Levels(value);
+
+    /// <inheritdoc cref="Levels(string, int)" />
+    /// <param name="target">The value the nested option applies to.</param>
+    /// <param name="value">How many levels deep to expand.</param>
+    public static OptionValue Levels(this OptionValue target, int value) => target.Nest("levels", Number(value));
+
+    /// <summary>Scopes <c>$levels=max</c> to a property, expanding a hierarchy as deep as the service allows.</summary>
+    /// <param name="property">The navigation property the nested option applies to.</param>
+    public static OptionValue LevelsMax(this string property) => new OptionValue(property).LevelsMax();
+
+    /// <inheritdoc cref="LevelsMax(string)" />
+    /// <param name="target">The value the nested option applies to.</param>
+    public static OptionValue LevelsMax(this OptionValue target) => target.Nest("levels", "max");
+
+    private static OptionValue Number(int value) => new(value.ToString(System.Globalization.CultureInfo.InvariantCulture));
+
     /// <summary>Appends <c>desc</c> to each value, as <c>$orderby</c> requires for descending sorts.</summary>
     internal static OptionValue[] Descending(IEnumerable<OptionValue> optionValues)
         => [.. optionValues.Select(ov => new OptionValue($"{ov} desc"))];

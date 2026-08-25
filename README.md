@@ -216,6 +216,12 @@ using Expression = SunAuto.OData.Expression;
 
 Batch requests, `$skiptoken` / `$deltatoken` (server-generated), and typed property selectors.
 
+## How this was built
+
+The implementation was written by **Claude Opus 5**, running in [Claude Code](https://claude.com/claude-code), and developed test-first. A hand-written xUnit suite defined the intended API, and the library was built to satisfy it; every feature since — the Edm literal types, the canonical functions, the lambda operators, `$apply`, key addressing — arrived the same way, with its tests written alongside it and the design revised whenever a test exposed an awkward or unsafe shape.
+
+The suite currently stands at 195 tests, and the examples throughout this README are copied from verified output rather than written by hand.
+
 ## License
 
 MIT

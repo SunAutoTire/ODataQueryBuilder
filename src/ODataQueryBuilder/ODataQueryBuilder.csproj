@@ -2,17 +2,27 @@
 
   <PropertyGroup>
     <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
-    <RootNamespace>SunAuto.OData</RootNamespace>
-    <AssemblyName>SunAuto.OData.QueryBuilder</AssemblyName>
-    <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <PackageId>SunAuto.OData.QueryBuilder</PackageId>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageReadmeFile>README.md</PackageReadmeFile>
-    <RepositoryUrl>https://github.com/SunAutoTire/ODataQueryBuilder</RepositoryUrl>
+    <ImplicitUsings>enable</ImplicitUsings>
+       <LangVersion>latest</LangVersion>
+ <RootNamespace>SunAuto.OData</RootNamespace>
+    <AssemblyName>SunAuto.OData.QueryBuilder</AssemblyName>
+    
+<PackageId>SunAuto.OData.QueryBuilder</PackageId>
+     <Version>1.0.1</Version>
+     <Authors>Daniel Przybylski</Authors>
+    <Company>Sun Auto Tire &amp; Service</Company>
     <Description>Build OData queries in .NET fluent interface.</Description>
-  </PropertyGroup>
+<PackageTags>odata;sunauto;fluent</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+      <PackageIcon>Sun-Auto-Icon.png</PackageIcon>
+  <PackageLicenseExpression>MIT</PackageLicenseExpression>
+      <RepositoryType>git</RepositoryType>
+  <RepositoryUrl>https://github.com/SunAutoTire/ODataQueryBuilder</RepositoryUrl>
+      <releaseNotes>Released as 1.0.1 w/renamed package.</releaseNotes>
+</PropertyGroup>
 
  <ItemGroup>
     <None Include="..\..\README.md" Pack="true" PackagePath="\" Condition="Exists('..\..\README.md')" />

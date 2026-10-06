@@ -371,16 +371,47 @@ public class QueryBuilder(params string?[] routeSegments)
     /// <returns>The query, or <see cref="Route"/> alone when no options were added.</returns>
     public string Build()
     {
-        if (options.Count == 0 && parameters.Count == 0)
-            return Route;
+        var rendered = RenderParameters().ToList();
 
-        var rendered = options
-            .OrderBy(RenderIndex)
-            .Select(option => option.ToString())
-            .Concat(parameters.Select(parameter => $"@{parameter.Name}={parameter.Value}"));
-
-        return $"{Route}?{string.Join('&', rendered)}";
+        return rendered.Count == 0 ? Route : $"{Route}?{string.Join('&', rendered)}";
     }
+
+    /// <summary>
+    /// Returns the query options and parameter aliases as name/value pairs, without the route and without
+    /// URL encoding, in the same order <see cref="Build"/> renders them.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// This is for callers that own the URL, such as an HTTP client that appends query parameters itself and
+    /// applies its own percent-encoding. <see cref="Build"/> already encodes the characters inside string literals that
+    /// would otherwise break the query string (<c>%</c>, <c>&amp;</c>, <c>#</c>, <c>+</c>); feeding that text to a client
+    /// that encodes again would double-encode it. Here that encoding is reversed, so the values are the plain OData
+    /// text: encode each name and value exactly once when writing them into a URL.
+    /// </para>
+    /// <para>
+    /// Names keep their prefix (<c>$filter</c>, <c>@p1</c>). An option written without a value is returned with a
+    /// <see langword="null"/> value.
+    /// </para>
+    /// </remarks>
+    /// <returns>The pairs in render order; empty when no options or aliases were added.</returns>
+    public IReadOnlyList<KeyValuePair<string, string?>> ToQueryParameters() =>
+    [
+        .. RenderParameters().Select(parameter =>
+        {
+            var separator = parameter.IndexOf('=');
+
+            return separator < 0
+                ? new KeyValuePair<string, string?>(Uri.UnescapeDataString(parameter), null)
+                : new KeyValuePair<string, string?>(
+                    Uri.UnescapeDataString(parameter[..separator]),
+                    Uri.UnescapeDataString(parameter[(separator + 1)..]));
+        }),
+    ];
+
+    private IEnumerable<string> RenderParameters() => options
+        .OrderBy(RenderIndex)
+        .Select(option => option.ToString())
+        .Concat(parameters.Select(parameter => $"@{parameter.Name}={parameter.Value}"));
 
     /// <summary>
     /// Renders the query as a <see cref="Uri"/>, which percent-encodes the characters that are merely invalid

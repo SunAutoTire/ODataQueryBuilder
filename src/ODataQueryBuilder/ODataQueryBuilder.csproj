@@ -9,7 +9,7 @@
     <AssemblyName>SunAuto.OData.QueryBuilder</AssemblyName>
 
     <PackageId>SunAuto.OData.QueryBuilder</PackageId>
-    <Version>1.0.1</Version>
+    <Version>1.1.0</Version>
     <Authors>Daniel Przybylski</Authors>
     <Company>Sun Auto Tire &amp; Service</Company>
     <Description>Build OData queries in .NET fluent interface.</Description>
@@ -20,7 +20,7 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/SunAutoTire/ODataQueryBuilder</RepositoryUrl>
-    <releaseNotes>Released as 1.0.1 w/renamed package.</releaseNotes>
+    <releaseNotes>1.1.0 adds QueryBuilder.ToQueryParameters.</releaseNotes>
   </PropertyGroup>
 
   <ItemGroup>

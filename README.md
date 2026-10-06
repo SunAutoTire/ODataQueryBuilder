@@ -196,6 +196,20 @@ builder.Build()            // https://example.com/Products?$filter=Name eq 'Milk
 builder.ToUri().AbsoluteUri // https://example.com/Products?$filter=Name%20eq%20'Milk'
 ```
 
+### Handing the query to an HTTP client
+
+If your HTTP client owns the URL and encodes query parameters itself (Refit, `FormUrlEncodedContent`, `QueryHelpers.AddQueryString`), don't pass it `Build()` output — the literal escapes above would be encoded a second time. Use `ToQueryParameters()`, which returns the option names and **unencoded** values, in `Build()` order and without the route:
+
+```csharp
+var parameters = new QueryBuilder("Products")
+    .Filter("Name".Equal("Milk & Honey"))
+    .Top(5)
+    .ToQueryParameters();
+// [ ("$filter", "Name eq 'Milk & Honey'"), ("$top", "5") ]
+```
+
+Names keep their prefix (`$filter`, `@p1`); encode each name and value once when writing the URL. An option with no value has a `null` value.
+
 Raw text passed as `new Expression("…")` is trusted verbatim — it is neither encoded nor parsed for precedence.
 
 ## A note on the `Expression` name
